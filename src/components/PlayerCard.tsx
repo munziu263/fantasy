@@ -1,4 +1,4 @@
-import { MouseEvent, useState } from "react";
+import { MouseEvent } from "react";
 import { Player, Position, Team } from "../types";
 
 interface PlayerCardProps {
@@ -37,12 +37,12 @@ export const PlayerCard = (props: PlayerCardProps) => {
     4: "hover:border-blue-300",
   };
 
-  const borderSelectedColor: { [position: number]: string } = {
-    1: "border-slate-300",
-    2: "border-emerald-300",
-    3: "border-cyan-300",
-    4: "border-blue-300",
-  };
+  // const borderSelectedColor: { [position: number]: string } = {
+  //   1: "border-slate-300",
+  //   2: "border-emerald-300",
+  //   3: "border-cyan-300",
+  //   4: "border-blue-300",
+  // };
 
   const shadowHoverColor: { [position: number]: string } = {
     1: "hover:shadow-slate-500",
@@ -70,8 +70,7 @@ export const PlayerCard = (props: PlayerCardProps) => {
                   overflow-hidden static
                   transition duration-700
                   hover:scale-95 hover:transition hover:duration-700
-                  m-1
-                  basis-1/5 shrink-0  h-fit
+                  basis-1/5 flex-shrink-0 m-1 h-fit
                   bg-gradient-to-t ${positionColor[props.player.element_type]}
                   `}
       key={props.player.code}
@@ -80,24 +79,24 @@ export const PlayerCard = (props: PlayerCardProps) => {
       }
     >
       {/* Player Image */}
-      <div className={`relative p-3`}>
+      <div className={`relative m-auto p-3`}>
         <img
-          className="rounded-full m-auto bg-zinc-50/10 shadow-xl"
+          className="rounded-full m-auto object-scale-down bg-zinc-50/10 shadow-xl"
           src={imageUrlBase + props.player.photo.replace(".jpg", ".png")}
           alt={
             props.player.web_name.length >= 3
               ? props.player.web_name.substring(0, 3) + "..."
               : props.player.web_name
           }
-          loading="lazy"
-          // onError={(event: any) => {
-          //   event.target.src = props.team
-          //     ? teamShirtImageUrlBase +
-          //       props.team.code +
-          //       teamShirtImageUrlSuffix
-          //     : "";
-          //   event.onError = null;
-          // }}
+          loading="eager"
+          onError={(event: any) => {
+            event.target.src = props.team
+              ? teamShirtImageUrlBase +
+                props.team.code +
+                teamShirtImageUrlSuffix
+              : "";
+            event.onError = null;
+          }}
         />
         <p className="text-zinc-50 sm:text-xs font-bold absolute top-0 left-0 p-2">
           {props.team && props.team.short_name}
@@ -126,8 +125,6 @@ export const PlayerCard = (props: PlayerCardProps) => {
             : props.player.web_name}
         </p>
       </div>
-
-      {/* Player stats */}
     </div>
   );
 };

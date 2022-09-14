@@ -27,6 +27,13 @@ export const PlayerCarousel = (props: PlayerCarouselProps) => {
     4: "from-blue-300/40",
   };
 
+  const POSITION_LIMIT: { [position: number]: number } = {
+    1: 2,
+    2: 5,
+    3: 5,
+    4: 3,
+  };
+
   return (
     <div
       className={`
@@ -54,15 +61,16 @@ export const PlayerCarousel = (props: PlayerCarouselProps) => {
         </div>
       </div>
       <div
-        className={`border-b rounded-l-xl bg-gradient-to-r ${
-          props.position && positionColor[props.position.id]
-        }
-                    basis-5/12 flex flex-row
+        className={`border-b rounded-l-xl bg-gradient-to-r 
+                  ${props.position && positionColor[props.position.id]}
+                    basis-5/12 flex flex-row p-1
         `}
       >
         {props.selectedPlayers &&
           props.selectedPlayers
-            .sort((a: Player, b: Player) => a.ict_index_rank - b.ict_index_rank)
+            .sort(
+              (a: Player, b: Player) => Number(b.ep_next) - Number(a.ep_next)
+            )
             .map((player: Player) => (
               <PlayerCard
                 player={player}
@@ -74,15 +82,24 @@ export const PlayerCarousel = (props: PlayerCarouselProps) => {
                 handlePlayerDeselect={props.handlePlayerDeselect}
               />
             ))}
-        {/* {props.position &&
-          [...Array(POSITION_LIMIT[props.position.id])].map((element) => (
-            <div className="mx-2 shrink-0 bg-zinc-50/30 rounded-lg "></div>
-          ))} */}
+        {props.position &&
+          [
+            ...Array(
+              POSITION_LIMIT[props.position.id] -
+                props.selectedPlayers.filter(
+                  (player: Player) => player.element_type === props.position?.id
+                ).length
+            ),
+          ].map((element: any) => (
+            <div className="basis-1/5 flex-shrink-0 m-1 bg-gradient-to-t from-zinc-50/10 via-transparent border-b rounded-lg "></div>
+          ))}
       </div>
-      <div className="basis-5/12 flex flex-row overflow-x-auto">
+      <div className="basis-5/12 p-1 flex flex-row overflow-x-auto">
         {props.unselectedPlayers &&
           props.unselectedPlayers
-            .sort((a: Player, b: Player) => a.ict_index_rank - b.ict_index_rank)
+            .sort(
+              (a: Player, b: Player) => Number(b.ep_next) - Number(a.ep_next)
+            )
             .map((player: Player) => (
               <PlayerCard
                 player={player}

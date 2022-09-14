@@ -1,20 +1,9 @@
 import { useEffect, useState, MouseEvent } from "react";
 import axios, { AxiosResponse } from "axios";
 import "./App.css";
-import { Team, Player, Position } from "./types";
+import { Team, Player, Position, GeneratedPlayer } from "./types";
 import { PlayerCard } from "./components/PlayerCard";
-import {
-  getPosition,
-  getTeam,
-  getPlayer,
-  getPlayerPosition,
-  getPlayerTeam,
-  getTeamPlayers,
-  getPositionPlayers,
-  bestPlayerBy,
-  filteredPlayersBy,
-  cheapestXPlayersForWhom,
-} from "./queries/queries";
+import { getPosition, getPlayerPosition } from "./queries/queries";
 import { PlayerCarousel } from "./components/PlayerCarousel";
 import { Dashboard } from "./components/Dashboard";
 
@@ -79,6 +68,93 @@ function App() {
     );
   };
 
+  const getOptimalTeam = () => {
+    console.log("clicked");
+    if (selectedPlayers.length === 0) {
+      // GET OPTIMAL TEAM
+      axios.get("api/generate").then((response: AxiosResponse) => {
+        const generatedTeam: GeneratedPlayer[] = response.data.team;
+        const names: string[] = generatedTeam.map(
+          (generatedPlayer: GeneratedPlayer) => generatedPlayer.name
+        );
+        const team: Player[] = unselectedPlayers.filter((player: Player) =>
+          names.includes(player.first_name + " " + player.second_name)
+        );
+        setSelectedPlayers(team);
+        setUnselectedPlayers((prevState: Player[]) =>
+          prevState.filter((player: Player) => !team.includes(player))
+        );
+      });
+    } else {
+      // TELL THE BACKEND TO EXCLUDE THE PLAYERS ALREADY SELECTED
+      // The backend requires full names seperated by a "-"
+      const excludePlayers: string[] = selectedPlayers.map(
+        (player: Player) => player.first_name + " " + player.second_name
+      );
+      // CALCULATE THE REMAINING POSITION LIMITS
+      const numberOfElementsType = (positionId: number) =>
+        selectedPlayers.filter(
+          (player: Player) => player.element_type === positionId
+        ).length;
+      // The backend requires a string. "2-5-5-3" is the default formation.
+      const formation: string = `${
+        POSITION_LIMIT[1] - numberOfElementsType(1)
+      }-${POSITION_LIMIT[2] - numberOfElementsType(2)}-${
+        POSITION_LIMIT[3] - numberOfElementsType(3)
+      }-${POSITION_LIMIT[4] - numberOfElementsType(4)}`;
+
+      // REDUCE THE BUDGET
+      const budget: number = selectedPlayers.reduce(
+        (remainingBudget: number, player: Player) =>
+          remainingBudget - player.now_cost,
+        1000
+      );
+
+      // IF BUDGET IS LESS THAN ZERO, ABORT PROCESS
+      if (budget <= 0) {
+        console.log(
+          "Your account balance has insufficient funds to carry out that transaction :'("
+        );
+        return;
+      }
+
+      // REQUEST THE OPTIMISED TEAM
+      axios
+        .post("api/generate", {
+          exclude_players: excludePlayers,
+          formation: formation,
+          budget: budget,
+        })
+        .then((response: AxiosResponse) => {
+          const generatedTeam: GeneratedPlayer[] = response.data.team;
+
+          const expectedLength =
+            15 -
+            numberOfElementsType(1) -
+            numberOfElementsType(2) -
+            numberOfElementsType(3) -
+            numberOfElementsType(4);
+          if (generatedTeam.length !== expectedLength) {
+            console.log(
+              "Something went wrong with the calculation.\n\nMost likely, we can't fill every spot with that small a budget!"
+            );
+            return;
+          }
+
+          const names: string[] = generatedTeam.map(
+            (generatedPlayer: GeneratedPlayer) => generatedPlayer.name
+          );
+          const team: Player[] = unselectedPlayers.filter((player: Player) =>
+            names.includes(player.first_name + " " + player.second_name)
+          );
+          setSelectedPlayers((prevState: Player[]) => [...prevState, ...team]);
+          setUnselectedPlayers((prevState: Player[]) =>
+            prevState.filter((player: Player) => !team.includes(player))
+          );
+        });
+    }
+  };
+
   useEffect(() => {
     axios
       .get("/api")
@@ -99,15 +175,15 @@ function App() {
       0
     );
     setBudget(initialBudget - spentBudget);
-  });
+  }, [selectedPlayers]);
+
   useEffect(() => {
     const totalPoints: number = selectedPlayers.reduce(
       (total: number, player: Player) => (total += Number(player.ep_next)),
       0
     );
     setExpectedPoints(totalPoints);
-  });
-  useEffect(() => {});
+  }, [selectedPlayers]);
 
   return (
     <div className="h-screen overflow-auto bg-slate-900 p-2 grid grid-cols-12">
@@ -149,6 +225,12 @@ function App() {
           />
         )}
       </div>
+      <button
+        className="rounded-lg shadow-lg text-white font-extrabold text-center m-auto p-3 bg-gradient-to-tr from-emerald-500 to-blue-500 hover:bg-gradient-to-br hover:from-blue-500 hover:to-purple-900"
+        onClick={getOptimalTeam}
+      >
+        GENERATE TEAM
+      </button>
     </div>
   );
 }

@@ -4,12 +4,12 @@ export interface FantasyFootball {
   phases: Phase[];
   teams: Team[];
   total_players: number;
-  elements: Player[];
-  element_stats: PlayerStat[];
-  element_types: Position[];
+  elements: Element[];
+  element_stats: ElementStat[];
+  element_types: ElementType[];
 }
 
-export interface PlayerStat {
+export interface ElementStat {
   label: string;
   name: string;
 }
@@ -30,7 +30,7 @@ export interface Position {
 
 export interface Player {
   chance_of_playing_next_round: number | null;
-  chance_of_playing_this_round: null;
+  chance_of_playing_this_round: number | null;
   code: number;
   cost_change_event: number;
   cost_change_event_fall: number;
@@ -39,14 +39,14 @@ export interface Player {
   dreamteam_count: number;
   element_type: number;
   ep_next: string;
-  ep_this: null;
+  ep_this: string;
   event_points: number;
   first_name: string;
   form: string;
   id: number;
   in_dreamteam: boolean;
   news: string;
-  news_added: Date | string | null;
+  news_added: string | null;
   now_cost: number;
   photo: string;
   points_per_game: string;
@@ -54,7 +54,7 @@ export interface Player {
   selected_by_percent: string;
   special: boolean;
   squad_number: null;
-  status: Status | string;
+  status: string;
   team: number;
   team_code: number;
   total_points: number;
@@ -102,7 +102,6 @@ export enum Status {
   A = "a",
   D = "d",
   I = "i",
-  S = "s",
   U = "u",
 }
 
@@ -113,10 +112,10 @@ export interface Event {
   average_entry_score: number;
   finished: boolean;
   data_checked: boolean;
-  highest_scoring_entry: null;
+  highest_scoring_entry: number | null;
   deadline_time_epoch: number;
   deadline_time_game_offset: number;
-  highest_score: null;
+  highest_score: number | null;
   is_previous: boolean;
   is_current: boolean;
   is_next: boolean;
@@ -133,15 +132,8 @@ export interface Event {
 }
 
 export interface ChipPlay {
-  chip_name: ChipName;
+  chip_name: string;
   num_played: number;
-}
-
-export enum ChipName {
-  Bboost = "bboost",
-  Freehit = "freehit",
-  The3Xc = "3xc",
-  Wildcard = "wildcard",
 }
 
 export interface TopElementInfo {
@@ -209,4 +201,22 @@ export interface Team {
   strength_defence_home: number;
   strength_defence_away: number;
   pulse_id: number;
+}
+
+export interface GeneratedTeamResponse {
+  solution: GeneratedSolution[];
+  team: GeneratedPlayer[];
+}
+
+export interface GeneratedSolution {
+  formation: string;
+  total_cost: number;
+  total_points: number;
+}
+
+export interface GeneratedPlayer {
+  cost: number;
+  name: string;
+  points: number;
+  position: string;
 }
